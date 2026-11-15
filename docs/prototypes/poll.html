@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TBT Poll — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Slab:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --tbt-blue:#0856C9; --tbt-blue-dark:#063F94;
+  --gi:#663366; --pd:#006600;
+  --page:#FFFFFF; --surface:#FFFFFF; --input:#F0F5FE; --selected:#EDF4FF;
+  --bar:#C9DBF5; --border:#D8E3F0; --ink:#1F2937; --muted:#667085;
+  --success:#16803C; --success-bg:#ECFDF3;
+  --ring:0 0 0 3px rgba(8,86,201,.18);
+  --look:var(--gi);
+  --font-ui:"Roboto",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --font-content:"Roboto Slab",Georgia,"Times New Roman",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#111824; --surface:#161E2C; --input:#1C2738; --selected:#1A2A44;
+    --bar:#2A3F63; --border:#2A3A52; --ink:#E6EBF3; --muted:#9AA6B8;
+    --success:#4CC27A; --success-bg:#12291D;
+    --gi:#B983B9; --pd:#5FB85F;
+    --tbt-blue:#4D8DF0; --tbt-blue-dark:#2F6FD6;
+    --ring:0 0 0 3px rgba(90,150,255,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#111824; --surface:#161E2C; --input:#1C2738; --selected:#1A2A44;
+  --bar:#2A3F63; --border:#2A3A52; --ink:#E6EBF3; --muted:#9AA6B8;
+  --success:#4CC27A; --success-bg:#12291D;
+  --gi:#B983B9; --pd:#5FB85F;
+  --tbt-blue:#4D8DF0; --tbt-blue-dark:#2F6FD6;
+  --ring:0 0 0 3px rgba(90,150,255,.35);
+}
+:where(*,*::before,*::after){box-sizing:inherit}
+body{margin:0;background:var(--page);color:var(--ink);font:400 16px/1.5 var(--font-ui)}
+
+/* prototype-only strip */
+.proto{max-width:1080px;margin:0 auto;padding:24px 24px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.proto .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--input);border-radius:12px;padding:4px;gap:4px}
+.seg button{font:600 13px/1 var(--font-ui);border:0;background:transparent;color:var(--ink);border-radius:9px;height:32px;padding:0 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--tbt-blue);box-shadow:0 1px 3px rgba(24,56,96,.15)}
+.linkbtn{font:600 13px/1 var(--font-ui);border:0;background:none;color:var(--tbt-blue);cursor:pointer;height:32px;padding:0 8px;border-radius:8px}
+.linkbtn:hover{background:var(--selected)}
+.seg button:focus-visible,.linkbtn:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* lesson context */
+.lesson{max-width:1080px;margin:0 auto;padding:48px 24px 96px}
+.instr{font:400 17px/1.5 var(--font-ui);margin:0 0 32px}
+
+/* ===== the poll component ===== */
+.tbtp{max-width:1080px}
+.tbtp-q{margin:0 0 48px;border:0;padding:0;min-width:0}
+.tbtp-q legend{display:grid;grid-template-columns:32px 1fr;gap:14px;align-items:start;padding:0;margin:0 0 20px;width:100%}
+.tbtp-n{width:32px;height:32px;border-radius:8px;background:var(--look);color:#fff;display:grid;place-items:center;font:700 16px/1 var(--font-ui);margin-top:1px}
+.tbtp-qt{font:700 22px/1.35 var(--font-content);color:var(--ink)}
+.tbtp-opts{display:grid;gap:10px;padding-left:46px}
+
+/* voting state */
+.tbtp-opt{position:relative;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start;padding:14px 18px;border:1px solid var(--border);border-radius:12px;cursor:pointer;font:400 17px/1.5 var(--font-content);transition:background .15s,border-color .15s}
+.tbtp-opt:hover{background:var(--selected);border-color:var(--tbt-blue)}
+.tbtp-opt input{position:absolute;opacity:0;pointer-events:none}
+.tbtp-l{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:grid;place-items:center;font:700 12px/1 var(--font-ui);color:var(--muted);margin-top:2px;transition:all .15s}
+.tbtp-opt:has(input:checked){background:var(--selected);border-color:var(--tbt-blue)}
+.tbtp-opt:has(input:checked) .tbtp-l{background:var(--tbt-blue);border-color:var(--tbt-blue);color:#fff}
+.tbtp-opt:has(input:focus-visible){box-shadow:var(--ring)}
+
+.tbtp-foot{display:flex;align-items:center;gap:20px;padding-left:46px;flex-wrap:wrap}
+.tbtp-vote{font:700 15px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;height:48px;padding:0 32px;border:0;border-radius:12px;background:var(--tbt-blue);color:#fff;cursor:pointer;transition:background .15s,transform .15s}
+.tbtp-vote:hover:not(:disabled){background:var(--tbt-blue-dark);transform:translateY(-1px)}
+.tbtp-vote:focus-visible{outline:none;box-shadow:var(--ring)}
+.tbtp-vote:disabled{opacity:.5;cursor:not-allowed}
+.tbtp-left{color:var(--muted);font-size:15px}
+
+/* results state */
+.tbtp-res{display:grid;gap:18px;padding-left:46px}
+.tbtp-r{display:grid;gap:8px}
+.tbtp-rl{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:baseline;font:400 17px/1.5 var(--font-content)}
+.tbtp-rl b{font-weight:500;color:var(--muted);margin-right:4px}
+.tbtp-pct{font:700 16px/1 var(--font-ui);font-variant-numeric:tabular-nums;color:var(--muted);min-width:44px;text-align:right}
+.tbtp-track{height:12px;border-radius:6px;background:var(--input);overflow:hidden}
+.tbtp-fill{height:100%;width:0;border-radius:6px;background:var(--bar);transition:width .7s cubic-bezier(.2,.7,.2,1)}
+.tbtp-r.mine .tbtp-fill{background:var(--tbt-blue)}
+.tbtp-r.mine .tbtp-pct{color:var(--tbt-blue)}
+.tbtp-mine{display:inline-flex;align-items:center;gap:4px;font:600 13px/1 var(--font-ui);color:var(--tbt-blue);background:var(--selected);border-radius:999px;padding:4px 10px;margin-left:8px;vertical-align:2px;white-space:nowrap}
+
+.tbtp-sum{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 0 0 46px;margin-top:-16px}
+.tbtp-total{font:700 18px/1.3 var(--font-ui)}
+.tbtp-total span{font-weight:400;color:var(--muted);font-size:15px;margin-left:6px}
+.tbtp-pts{display:inline-flex;align-items:center;gap:8px;background:var(--success-bg);color:var(--success);font:600 15px/1 var(--font-ui);border-radius:12px;padding:12px 16px}
+
+.img{margin-top:48px;aspect-ratio:16/9;border-radius:16px;background:linear-gradient(135deg,var(--input),var(--selected));display:grid;place-items:center;color:var(--muted);font-size:14px}
+
+@media (max-width:640px){
+  .tbtp-opts,.tbtp-res,.tbtp-foot,.tbtp-sum{padding-left:0}
+  .tbtp-qt{font-size:19px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="proto" role="region" aria-label="Prototype controls">
+  <span>Prototype — how a student sees the poll inside a lesson</span>
+  <div class="ctl">
+    <div class="seg" role="group" aria-label="Lesson category">
+      <button type="button" data-look="gi" aria-pressed="true">Man and Society</button>
+      <button type="button" data-look="pd" aria-pressed="false">Personal Development</button>
+    </div>
+    <button type="button" class="linkbtn" id="reset">Vote again (demo)</button>
+  </div>
+</div>
+
+<div class="lesson">
+  <p class="instr">Cast your vote in the poll below.</p>
+  <div class="tbtp" id="poll" aria-live="polite"></div>
+  <div class="img">Poll image</div>
+</div>
+
+<script>
+const POLL = {
+  questions:[
+    {q:"After watching this video, which insight about stress do you find most surprising?",
+     a:["That believing stress is harmful can be more dangerous than the stress itself.",
+        "That viewing your stress response as helpful changes how your body actually reacts.",
+        "That oxytocin is released as part of the stress response, not only when we hug someone.",
+        "That caring for others can completely cancel out the harmful effects of stress."],
+     votes:[9,5,6,1]},
+    {q:"Which of Kelly McGonigal’s ideas do you think would help you the most?",
+     a:["Treating a pounding heart as a sign that the body is preparing me for a challenge.",
+        "Reaching out to others when I feel under pressure instead of bottling things up.",
+        "Helping someone else when I’m stressed rather than focusing only on myself.",
+        "Chasing meaning in life instead of trying to avoid every difficult situation."],
+     votes:[6,8,3,4]},
+    {q:"Which takeaway from this video are you most likely to apply at work?",
+     a:["Reminding myself that my stress response is helping me rise to a challenge.",
+        "Talking to a colleague when I feel overwhelmed instead of hiding the problem.",
+        "Offering help to a teammate when I notice they are struggling under pressure.",
+        "Choosing a meaningful project even if it brings more stress than an easier one."],
+     votes:[5,7,6,3]}
+  ],
+  voters:21, points:3
+};
+const L='ABCD';
+const root=document.getElementById('poll');
+let mine=null;
+
+function el(tag,cls,text){const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;}
+
+function renderVote(){
+  root.textContent='';
+  const form=el('form'); form.noValidate=true;
+  POLL.questions.forEach((q,i)=>{
+    const fs=el('fieldset','tbtp-q');
+    const lg=el('legend'); lg.append(el('span','tbtp-n',i+1), el('span','tbtp-qt',q.q));
+    const opts=el('div','tbtp-opts');
+    q.a.forEach((a,j)=>{
+      const lab=el('label','tbtp-opt');
+      const inp=document.createElement('input'); inp.type='radio'; inp.name='q'+i; inp.value=j;
+      lab.append(inp, el('span','tbtp-l',L[j]), el('span',null,a));
+      opts.appendChild(lab);
+    });
+    fs.append(lg,opts); form.appendChild(fs);
+  });
+  const foot=el('div','tbtp-foot');
+  const btn=el('button','tbtp-vote','Vote'); btn.type='submit'; btn.disabled=true;
+  const left=el('span','tbtp-left');
+  foot.append(btn,left); form.appendChild(foot);
+  const update=()=>{
+    const n=POLL.questions.filter((_,i)=>form.querySelector(`input[name=q${i}]:checked`)).length;
+    btn.disabled = n<POLL.questions.length;
+    const r=POLL.questions.length-n;
+    left.textContent = r ? `Answer ${r===POLL.questions.length?'all three questions':r===1?'one more question':r+' more questions'} to vote` : '';
+  };
+  form.addEventListener('change',update); update();
+  form.addEventListener('submit',e=>{
+    e.preventDefault();
+    mine=POLL.questions.map((_,i)=>+form.querySelector(`input[name=q${i}]:checked`).value);
+    mine.forEach((j,i)=>POLL.questions[i].votes[j]++); POLL.voters++;
+    renderResults(true);
+  });
+  root.appendChild(form);
+}
+
+function renderResults(justVoted){
+  root.textContent='';
+  POLL.questions.forEach((q,i)=>{
+    const total=q.votes.reduce((a,b)=>a+b,0)||1;
+    // rounding that always adds up to 100
+    const raw=q.votes.map(v=>v/total*100), fl=raw.map(Math.floor);
+    let rest=100-fl.reduce((a,b)=>a+b,0);
+    raw.map((v,k)=>[v-fl[k],k]).sort((a,b)=>b[0]-a[0]).forEach(([,k])=>{ if(rest>0){fl[k]++;rest--;} });
+    const sec=el('section','tbtp-q'); sec.setAttribute('aria-label',`Question ${i+1} results`);
+    const head=el('div'); head.style.cssText='display:grid;grid-template-columns:32px 1fr;gap:14px;margin:0 0 20px';
+    head.append(el('span','tbtp-n',i+1), el('span','tbtp-qt',q.q));
+    const res=el('div','tbtp-res');
+    q.a.forEach((a,j)=>{
+      const r=el('div','tbtp-r'+(mine&&mine[i]===j?' mine':''));
+      const line=el('div','tbtp-rl');
+      const txt=el('span'); txt.append(el('b',null,L[j]+'.'), document.createTextNode(a));
+      if(mine&&mine[i]===j){ txt.append(el('span','tbtp-mine','✓ Your vote')); }
+      line.append(txt, el('span','tbtp-pct',fl[j]+'%'));
+      const tr=el('div','tbtp-track'); tr.setAttribute('role','img'); tr.setAttribute('aria-label',`${fl[j]} percent`);
+      const f=el('div','tbtp-fill'); f.dataset.w=fl[j]; tr.appendChild(f);
+      r.append(line,tr); res.appendChild(r);
+    });
+    sec.append(head,res); root.appendChild(sec);
+  });
+  const sum=el('div','tbtp-sum');
+  const t=el('div','tbtp-total',`${POLL.voters} ${POLL.voters===1?'student has':'students have'} voted`);
+  sum.appendChild(t);
+  if(justVoted){ sum.appendChild(el('span','tbtp-pts',`✓ Thanks for voting. You earned ${POLL.points} points.`)); }
+  root.appendChild(sum);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>root.querySelectorAll('.tbtp-fill').forEach(f=>f.style.width=f.dataset.w+'%')));
+  if(justVoted) root.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth', block:'start'});
+}
+
+document.querySelectorAll('[data-look]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-look]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');
+  document.documentElement.style.setProperty('--look', b.dataset.look==='pd'?'var(--pd)':'var(--gi)');
+}));
+document.getElementById('reset').addEventListener('click',()=>{
+  if(mine){ mine.forEach((j,i)=>POLL.questions[i].votes[j]--); POLL.voters--; mine=null; }
+  renderVote();
+});
+renderVote();
+</script>
+</body>
+</html>
